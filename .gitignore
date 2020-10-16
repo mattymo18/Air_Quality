@@ -1,0 +1,9 @@
+.rstudio/*
+.local/*
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+Scratch_Work.Rmd
+Source-Data/*.csv
+derived_data/*.csv
