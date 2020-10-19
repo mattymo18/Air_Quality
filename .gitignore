@@ -5,5 +5,5 @@
 .RData
 .Ruserdata
 Scratch_Work.Rmd
-Source-Data/*.csv
+Source_Data/*.csv
 derived_data/*.csv
