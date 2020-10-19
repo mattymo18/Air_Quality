@@ -2,7 +2,7 @@
 
 clean:
 
-			rm derived_data/*.csv
+	rm derived_data/*.csv
 			
 			
 derived_data/Raleigh.Clean.csv:\
