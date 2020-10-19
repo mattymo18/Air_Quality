@@ -37,7 +37,7 @@ Data
 
 The data used in this analysis comes from OpenAQ.org.  OpenAQ is an organization that collects and provides data for air quality measurements in 95 countries.  They collect measurements of O3 (Ozone), CO (Carbon Monoxide), NO2 (Nitrogen Dioxide), PM10 (Particulate Matter), PM2.5, SO2 (Sulfur Dioxide), and BC (Black Carbon) in specific locations and publish these results on their website.  By building this open source database of air quality, OpenAQ is encouraging collaboration between scientists across the globe in an attempt to fix air inequalities.  This data is ideal for our analysis because it provides us up-to-date measurements of different air pollutants in our specific locations. Also, since the data is timestamped, we can simply join the air quality data with lagged Covid-19 data to assess trends between the two. <br/>
 
-Data will need to be in Source_Data directory within local repository. 
+Data will need to be in Source_Data directory within local repository.  Data needs to be named Raleigh_Air.csv and Columbi_Air.csv respecitvely. 
 
 Methodology
 -----------
