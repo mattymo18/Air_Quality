@@ -1,0 +1,90 @@
+---
+title: "Scratch Work"
+author: "Matt Johnson"
+date: "10/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Read in data
+```{r}
+Raleigh_Air <- read.csv("Source_Data/Raleigh_Air.csv") %>% 
+  select(city, utc, parameter, value, latitude, longitude)
+Columbia_Air <- read.csv("Source_Data/Columbi_Air.csv") %>% 
+  select(city, utc, parameter, value, latitude, longitude)
+```
+
+```{r}
+Raleigh <- na.omit(spread(Raleigh_Air, key = parameter, value = value))
+
+Raleigh$utc = as.Date(Raleigh$utc) 
+Raleigh$Time <- format(Raleigh$utc,"%H:%M:%S")
+Raleigh = Raleigh %>% 
+  select(-Time)
+Raleigh.Clean <- Raleigh %>% 
+  group_by(utc, .drop = T) %>% 
+  summarise(CO = mean(co), 
+            NO2 = mean(no2), 
+            O3 = mean(o3), 
+            PM10 = mean(pm10), 
+            PM25 = mean(pm25), 
+            SO2 = mean(so2)) %>% 
+  mutate(Location = "Raleigh") %>% 
+  arrange(utc) %>% 
+  select(Location, utc, CO, NO2, O3, PM10, PM25, SO2)
+
+Columbia <- spread(Columbia_Air, key = parameter, value = value)
+
+Columbia$utc = as.Date(Columbia$utc) 
+Columbia$Time <- format(Columbia$utc,"%H:%M:%S")
+Columbia = Columbia %>% 
+  select(-Time)
+Columbia.Clean <- Columbia %>% 
+  group_by(utc, .drop = T) %>% 
+  summarise(CO = mean(co), 
+            O3 = mean(o3), 
+            PM25 = mean(pm25), 
+            SO2 = mean(so2)) %>% 
+  mutate(Location = "Columbia") %>% 
+  arrange(utc) %>% 
+  select(Location, utc, CO, O3, PM25, SO2)
+```
+
+Akshay's data binding with covid and raleigh clean
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+Confirmed_Cases <- read_csv("Source_Data/covid_confirmed_usafacts.csv")
+Raleigh_Clean <- read_csv("derived_data/Raleigh.Clean.csv")
+```
+
+```{r}
+#Begin_Date = gsub("^0", "", format(min(Raleigh_Clean$utc), format = "%m/%d/%Y"))
+#End_Date = gsub("^0", "", format(max(Raleigh_Clean$utc), format = "%m/%d/%Y"))
+Confirmed_Cases_Raleigh <- subset(Confirmed_Cases, State =="NC" & countyFIPS == 37183, select = `1/22/20`:`10/18/20`)
+
+day <- seq(10,21)
+for (i in day) {
+Confirmed_Cases_Raleigh[[paste("1/", i,"/20",sep = "")]] = 0
+}
+
+Pivoted_Cases <- Confirmed_Cases_Raleigh %>%
+  pivot_longer(cols = `1/22/20`:`1/21/20`,names_to = "utc", values_to = "Cases")
+
+Pivoted_Cases$utc <- as.Date(Pivoted_Cases$utc, "%m/%d/%Y")
+year(Pivoted_Cases$utc) <- 2020
+
+Raleigh_Clean_COVID <- merge(Raleigh_Clean, Pivoted_Cases,by="utc")
+
+write.csv("derived_data/Raleigh.Clean.Covid.csv")
+```
+
+

@@ -4,6 +4,3 @@
 .Rhistory
 .RData
 .Ruserdata
-Scratch_Work.Rmd
-Source_Data/*.csv
-derived_data/*.csv
