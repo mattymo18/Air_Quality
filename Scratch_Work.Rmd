@@ -14,7 +14,7 @@ Read in data
 ```{r}
 Raleigh_Air <- read.csv("Source_Data/Raleigh_Air.csv") %>% 
   select(city, utc, parameter, value, latitude, longitude)
-Columbia_Air <- read.csv("Source_Data/Columbi_Air.csv") %>% 
+Greenville_Air <- read.csv("Source_Data/Greenville_Air.csv") %>% 
   select(city, utc, parameter, value, latitude, longitude)
 ```
 
@@ -37,21 +37,18 @@ Raleigh.Clean <- Raleigh %>%
   arrange(utc) %>% 
   select(Location, utc, CO, NO2, O3, PM10, PM25, SO2)
 
-Columbia <- spread(Columbia_Air, key = parameter, value = value)
+Greenville <- spread(Greenville_Air, key = parameter, value = value)
 
-Columbia$utc = as.Date(Columbia$utc) 
-Columbia$Time <- format(Columbia$utc,"%H:%M:%S")
-Columbia = Columbia %>% 
+Greenville$utc = as.Date(Greenville$utc) 
+Greenville$Time <- format(Greenville$utc,"%H:%M:%S")
+Greenville = Greenville %>% 
   select(-Time)
-Columbia.Clean <- Columbia %>% 
+Greenville.Clean <- Greenville %>% 
   group_by(utc, .drop = T) %>% 
-  summarise(CO = mean(co), 
-            O3 = mean(o3), 
-            PM25 = mean(pm25), 
-            SO2 = mean(so2)) %>% 
-  mutate(Location = "Columbia") %>% 
+  summarise(PM25 = mean(pm25)) %>% 
+  mutate(Location = "Greenville") %>% 
   arrange(utc) %>% 
-  select(Location, utc, CO, O3, PM25, SO2)
+  select(Location, utc, PM25)
 ```
 
 Akshay's data binding with covid and raleigh clean
