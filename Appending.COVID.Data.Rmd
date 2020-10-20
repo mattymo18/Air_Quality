@@ -1,0 +1,37 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+Confirmed_Cases <- read_csv("Fall 2020/STOR 664/Project/Source_Data/covid_confirmed_usafacts.csv")
+Raleigh_Clean <- read_csv("Fall 2020/STOR 664/Project/Source_Data/Raleigh.Clean.csv")
+```
+
+```{r}
+#Begin_Date = gsub("^0", "", format(min(Raleigh_Clean$utc), format = "%m/%d/%Y"))
+#End_Date = gsub("^0", "", format(max(Raleigh_Clean$utc), format = "%m/%d/%Y"))
+Confirmed_Cases_Raleigh <- subset(Confirmed_Cases, State =="NC" & countyFIPS == 37183, select = `1/22/20`:`10/18/20`)
+
+day <- seq(10,21)
+for (i in day) {
+Confirmed_Cases_Raleigh[[paste("1/", i,"/20",sep = "")]] = 0
+}
+
+Pivoted_Cases <- Confirmed_Cases_Raleigh %>%
+  pivot_longer(cols = `1/22/20`:`1/21/20`,names_to = "utc", values_to = "Cases")
+
+Pivoted_Cases$utc <- as.Date(Pivoted_Cases$utc, "%m/%d/%Y")
+year(Pivoted_Cases$utc) <- 2020
+
+Raleigh_Clean_COVID <- merge(Raleigh_Clean, Pivoted_Cases,by="utc")
+```
+
+```{r}
+write.csv(Raleigh_Clean_COVID, "Raleigh.Clean.COVID.csv")
+```
+
