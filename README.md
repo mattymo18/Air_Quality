@@ -4,8 +4,8 @@ STOR 664 Project
 Authors
 -------
 
-Andrew Ackerman <br/>
 Akshay Sridharan <br/>
+Andrew Ackerman <br/>
 Matt Johnson <br/>
 
 USAGE
