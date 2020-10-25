@@ -25,7 +25,7 @@ This Docker container is based on rocker/verse. To run rstudio server:
 Then connect to the machine on port 8787.
 
 #### Make
-Use Makefile as recipe book for building artifact found in derivded_data directory. 
+Use Makefile as recipe book for building artifacts found in derivded directories. 
 
 ##### Example:
 In local project directory, to build artifact named Raleigh.Clean.csv:
@@ -33,6 +33,7 @@ In local project directory, to build artifact named Raleigh.Clean.csv:
     > make derived_data/Raleigh.Clean.csv
     
 Use artifacts before colon as make targets. Dependencies are listed after colon. 
+
 Introduction
 ------------
 
