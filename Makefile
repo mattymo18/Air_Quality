@@ -3,6 +3,7 @@
 clean:
 
 	rm derived_data/*.csv
+	rm derived_graphs/*.csv
 			
 
 derived_graphs/Time.Vs.Cases.plot.png\
