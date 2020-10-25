@@ -72,7 +72,7 @@ g6 <- Rdat %>%
   ylab("Particulate Matter 2.5") +
   xlab("Date")
 
-Graph3 <- grid.arrange(g5, g6, nrow = 1)
+Graph3 <- grid.arrange(g6, g5, nrow = 1)
 ggsave("derived_graphs/Time.Vs.Cases.plot.png", plot = Graph3)  
 
 
