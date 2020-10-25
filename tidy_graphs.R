@@ -9,17 +9,17 @@ Rdat<-read.csv("derived_data/Raleigh.Clean.Covid.csv")
 
 g1 <- Gdat %>% 
   ggplot(aes(x = Cases, y = PM25)) +
-  geom_point(alpha = .5, color = "Red") +
+  geom_point(alpha = .5, color = "Purple") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black")) +
-  ggtitle("Raleigh") +
+  ggtitle("Greenville") +
   theme(plot.title = element_text(hjust = 0.5))
 g2 <- Rdat %>% 
   ggplot(aes(x = Cases, y = PM25)) +
-  geom_point(alpha = .5, color = "Purple") +
+  geom_point(alpha = .5, color = "Red") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))  +
-  ggtitle("Greenville") +
+  ggtitle("Raleigh") +
   theme(plot.title = element_text(hjust = 0.5))
 
 Graph1 <- grid.arrange(g1, g2, nrow = 1)
