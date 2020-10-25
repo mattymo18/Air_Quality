@@ -85,3 +85,100 @@ write.csv("derived_data/Raleigh.Clean.Covid.csv")
 ```
 
 
+```{r}
+#read in the data
+Gdat<-read.csv("Greenville.Clean.Covid.csv")
+Rdat<-read.csv("Raleigh.Clean.Covid.csv")
+#initialize variables
+t<-Gdat[,2]
+gtime<-as.Date(t, "%Y-%m-%d")
+Gpm<-Gdat[,5]
+Gcase<-Gdat[,6]
+
+d<-Rdat[,2]
+rtime<-as.Date(d, "%Y-%m-%d")
+Rpm<-Rdat[,9]
+Rcase<-Rdat[,11]
+
+#initial plots for assessing transformation needs and 
+#model fits
+plot(Gcase, Gpm, xlab= "Greenville Corona Case Count", ylab="Greenville Particulate Matter 2.5")
+plot(gtime, Gpm, xlab="Time", ylab="Greenville Particulate Matter 2.5", type="o", col="blue")
+plot(gtime, Gcase, xlab="Time", ylab="Greenville Corona Case Count", col="red", pch="*")
+
+plot(Rcase, Rpm, xlab= "Raleigh Corona Case Count", ylab="Raleigh Particulate Matter 2.5")
+plot(rtime, Rpm, xlab="Time", ylab="Raleigh Particulate Matter 2.5", type="o", col="green")
+plot(rtime, Rcase, xlab="Time", ylab="Raleigh Corona Case Count", col="purple", pch="*")
+
+
+```
+
+## Initial Reaction
+With regard to both cities, I think it will be prudent to do some sort of variable transformation on the explanatory variable.  Right now, the trend appears almost lateral because of the discrepancy in scale.  That said, it is worth noting that while Corona case exhibit distinctly nonlinear trends with respect time time (coinciding with our intuition about the virus to date), their relationship with respect to PM does not seem to exhibit anything starkly non-linear.
+
+As a second observation, I find this spike in PM (in both Raleigh and Greenville) curious.  This should be in the height of stay at home orders, so this seems counterintuitive.  Perhaps it is merely an outlier, but given its presence in both data sets, I think we would do well not to simply ignore it.  One potential explanation seems to be that since particulate matter includes particles from industries, perhaps coal burner power plants were straining under the demands of newly house-ridden customers and expelling more waste.  
+
+The last and most stark observation is the hole in the Raleigh data.  I hadn't noticed this before, but it seems that quarantine also affected data collection.  While this is certainly not optimal (that was a rather crucial and informative time period) it can be alluded to in the paper, and I don't think it is completely damning.  
+
+
+```{r}
+## transformation consideration
+
+sqcase<-sqrt(Gcase)
+stripchart(Gdat[,6],method='jitter',las=2,vertical=TRUE, main="Strip Chart Greenville Corona Case Count")
+boxplot(Gdat[,6], main="Box Plot of Greenville Corona Case Count")
+boxplot(sqcase, main="Box Plot of Square Root Transformed Greenville Corona Case Count")
+boxplot(Gdat[,5], main="Box Plot of Greenville Particulate Air Matter")
+plot(sqcase, Gpm, xlab= "Square Root Tranformed Greenville Corona Case Count", ylab="Greenville Particulate Matter 2.5")
+
+
+SQcase<-sqrt(Rcase)
+stripchart(Rdat[,11],method='jitter',las=2,vertical=TRUE, main="Strip Chart Raleigh Corona Case Count")
+boxplot(Rdat[,11], main="Box Plot of Raleigh Corona Case Count")
+boxplot(SQcase, main="Box Plot of Square Root Transformed Raleigh Corona Case Count")
+boxplot(Rdat[,9], main="Box Plot of Raleigh Particulate Air Matter")
+plot(SQcase, Rpm, xlab= "Square Root Tranformed Raleigh Corona Case Count", ylab="Raleigh Particulate Matter 2.5")
+```
+
+
+
+## Reflection on Transformation
+
+Box plots elucidate the presence of outliers in Greenville Corona and PM data as well as Raleigh PM data.  A simple square root transform of the explanatory variable seems to ameliorate the problem of outliers and lessen the skewness in the Greenville corona data (though admittedly some remains).  For this reason, I think a square root transformation is justifiable.  Now, it is of note that the Raleigh corona data does not present the same outliers.  However, for compatibility of interpretation between cities I think it is wise to transform the Raleigh data in an analogous manner.  Also notice that while it may not eradicate outliers it does help to center the data a bit more.  Now, it could also be argued that we may need to transform the response variable to handle distortion.  This is fair.  My only hesitation is that often muddies the task of interpretation.  If necessary, I think it is fine to transform, but I wanted to get your take on it before I did anything with the response.  
+
+```{r}
+#initial model for Greenville
+
+N<-length(t)
+p<-2
+#initialize time(tax) and observation (Y) arrays
+tax<-1:N
+Y<-matrix(0,N,1)
+#define observations
+Y<-sqcase
+#define design matrix
+D<-matrix(0,N,p)
+for(i in 1:N){
+  D[i,1]<-1
+  D[1,2]<-i
+}
+#compute OLS Estimators
+H1<-t(D) %*% D
+H2<-solve(H1)
+H2<-H2 %*% t(D)
+theta_hat<-H2 %*% Y
+theta_hat
+
+reg<-lm(sqcase~Gpm)
+summary(reg)
+```
+
+## Interpretation for Initial Models
+
+Alright let me explain above really quickly.  When initially I stated thinking about the model, I was thinking of this more in terms of an autoregressive time series.  In generality, I wanted to derive a model from a general time series, $y_t=m_t+\epsilon_t$ where $m_t$ is the mean component given by the general regression model $m_t=\beta_0+\beta_1t_1+...+\beta_kt_k$ and $\epsilon_t$ is the autoregressive model given by $\epsilon_t=\phi_1\epsilon_{t-1}+\phi_2\epsilon_{t-2}+...+\phi_{t-p}\epsilon_{t-p}+z_t$. In particular, I was considering a first order autoregressive model given by $\epsilon_t=\phi_1\epsilon_{t-1}+z_t$.  That is where this first bit of output comes from, and we get a negative (albeit small in magnitude) slope.  However, then I started contemplating what this was actually emblematic of, and I am not convinced this is the right model (perhaps this was dumb to have done in the first place, but I got lured in seeing data that was time-stamped).  This is not considering the effect of our explanatory variable on our response, but treating our response as a function of time (duh these are variables that fluctuate with time, but time is not directly our explanatory variable).  Potentially useful information, but not what we are going for.  
+
+So then, I just ran a simply linear regression of our root transformed explanatory variable on our response.  Here we get a positive slope coefficient (which is significant).  This slope signage is different than I would have hoped, but not entirely unsurprising given the plots of the data.  The main take-away at the moment is that our predictive capabilities (frankly) are piss power.  Obviously this is a first crude attempt at a model made after I went through time series contemplation, but including other variables is only going to do so much to bolster an adjusted R^2 of 0.024.  Not to worry (we can still mess around plenty with the model, and Dr. Smith ultimately capitulated that even if we have to admit that our anticipated results were not what we found, that is fine so long as the analysis was sound).  For now, let's just work on refining what we have.  
+
+
+
+
