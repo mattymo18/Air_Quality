@@ -58,3 +58,15 @@ Methodology
 We will employ a number of data reduction and cleaning techniques to ensure that the finalized data set is not so unwieldy as to overburden the analysis tools at our disposal.  That is to say, out of six possible measurements of various types of Air Pollutants, this analysis will focus around one – carbon monoxide.  Carbon monoxide is the air pollutant most directly related to rampant utilization of internal combustion engines.  Thus, while other measures could serve as a viable proxy for automobile usage during pandemic situations, Carbon Monoxide seems to offer a much more intuitive link between our two data sets. <br/>
 
 We have narrowed the time span to include April 2020 through September 2020 with hourly readings averaged across a day to further scale the observation count by a factor of 124.  This was specifically chosen as it coincides with a small time period before the most explicit quarantine policies (such as state-wide stay at home orders) went into effect as well as a more prolonged time after such mandates had been lifted.  Note, this is not to say that the pandemic has been eradicated, or even that it is any less of a poignant threat, in September 2020, only that mandated stay at home orders have largely been lifted and the economy is operating on a modified basis.
+
+Preliminary Plots
+-----------------
+![](derived_graphs/PM25.Vs.Cases.plot.png)
+
+
+
+
+
+
+
+
