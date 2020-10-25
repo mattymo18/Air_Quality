@@ -10,6 +10,7 @@ Matt Johnson <br/>
 
 USAGE
 -----
+#### Docker
 You'll need Docker and the ability to run Docker as your current user.
 
 You'll need to build the container:
