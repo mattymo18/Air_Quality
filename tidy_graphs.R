@@ -75,4 +75,15 @@ g6 <- Rdat %>%
 Graph3 <- grid.arrange(g5, g6, nrow = 1)
 ggsave("derived_graphs/Time.Vs.Cases.plot.png", plot = Graph3)  
 
+PM25.data <- rbind(Gdat[, c(4, 5)] , Rdat[, c(4, 9)])
 
+g7 <- PM25.data %>% 
+  ggplot(aes(y = PM25, x = Location)) +
+  geom_boxplot(aes(color = Location)) + 
+  geom_jitter(aes(color = Location), alpha = .5) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  ggtitle("Particulate Matter 2.5") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_color_manual(breaks = c("Greenville", "Raleigh"), values=c("Purple", "Red")) 
+ggsave("derived_graphs/PM25.boxplot.png", plot = g7) 

@@ -222,6 +222,21 @@ boxplot(Rdat[,9], main="Box Plot of Raleigh Particulate Air Matter")
 plot(SQcase, Rpm, xlab= "Square Root Tranformed Raleigh Corona Case Count", ylab="Raleigh Particulate Matter 2.5")
 ```
 
+ggplot versions of boxplots
+```{r}
+PM25.data <- rbind(Gdat[, c(4, 5)] , Rdat[, c(4, 9)])
+
+g7 <- PM25.data %>% 
+  ggplot(aes(y = PM25, x = Location)) +
+  geom_boxplot(aes(color = Location)) + 
+  geom_jitter(aes(color = Location), alpha = .5) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  ggtitle("Particulate Matter 2.5") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_color_manual(breaks = c("Greenville", "Raleigh"), values=c("Purple", "Red")) 
+ggsave("derived_graphs/PM25.boxplot.png", plot = g7)  
+```
 
 
 ## Reflection on Transformation
@@ -261,6 +276,9 @@ Alright let me explain above really quickly.  When initially I stated thinking a
 
 So then, I just ran a simply linear regression of our root transformed explanatory variable on our response.  Here we get a positive slope coefficient (which is significant).  This slope signage is different than I would have hoped, but not entirely unsurprising given the plots of the data.  The main take-away at the moment is that our predictive capabilities (frankly) are piss power.  Obviously this is a first crude attempt at a model made after I went through time series contemplation, but including other variables is only going to do so much to bolster an adjusted R^2 of 0.024.  Not to worry (we can still mess around plenty with the model, and Dr. Smith ultimately capitulated that even if we have to admit that our anticipated results were not what we found, that is fine so long as the analysis was sound).  For now, let's just work on refining what we have.  
 
+Let's try some other modeling methods
+```{r}
 
+```
 
 

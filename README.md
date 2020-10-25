@@ -67,6 +67,8 @@ Preliminary Plots
 
 ![](derived_graphs/Time.Vs.PM25.plot.png)
 
+![](derived_graphs/PM25.boxplot.png)
+
 
 
 
