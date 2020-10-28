@@ -3,3 +3,4 @@ MAINTAINER Matt Johnson <Johnson.Matt1818@gmail.com>
 RUN R -e "install.packages('lubridate')"
 RUN R -e "install.packages('gridExtra')"
 RUN R -e "install.packages('MASS')"
+RUN R -e "install.packages('pscl')"

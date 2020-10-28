@@ -278,7 +278,84 @@ So then, I just ran a simply linear regression of our root transformed explanato
 
 Let's try some other modeling methods
 ```{r}
+### zero-inflate poisson glm
 
+DF.Raleigh <- read.csv("derived_data/Raleigh.Clean.Covid.csv") %>% 
+  select(utc, Location, PM25, Cases)
+DF.Greenville <- read.csv("derived_data/Greenville.Clean.Covid.csv") %>% 
+  select(utc, Location, PM25, Cases)
+
+DF <- rbind(DF.Raleigh, DF.Greenville)
+
+sum(DF.Raleigh$Cases == 0)
+sum(DF.Greenville$Cases == 0)
+
+head(DF)
+
+library(pscl)
+
+Ral.zero.mod <- zeroinfl(Cases ~ PM25, dist = "negbin", data = DF.Raleigh)
+summary(Ral.zero.mod)
+
+Green.zero.mod <- zeroinfl(Cases ~ PM25, dist = "negbin", data = DF.Greenville)
+summary(Green.zero.mod)
+
+source("Utils.R")
+
+predictions <- predict(Green.zero.mod, type = "response")
+Results <- eval_results(DF.Greenville$Cases, predictions, DF.Greenville)
+
+#Let's make common glm models to see if the zeroinfl is at all better
+
+Ral.glm <- glm(Cases ~ PM25, family = poisson, data = DF.Raleigh)
+Green.glm <- glm(Cases ~ PM25, family = poisson, data = DF.Greenville)
+
+predictions <- predict(Green.glm, type = "response")
+Results <- eval_results(DF.Greenville$Cases, predictions, DF.Greenville)
+
+
+#all of these are terrible, lets see what happens if we remove all the 0s from the sets and really check when corona started what happens. 
+
+DF.Raleigh.noZ <- DF.Raleigh %>% 
+  filter(Cases > 0)
+DF.Green.noZ <- DF.Greenville %>% 
+  filter(Cases > 0)
+
+# now lets just try to make some glms
+
+Ral.glm.noZ <- glm(Cases ~ PM25, family = poisson, data = DF.Raleigh.noZ)
+Green.glm.noZ <- glm(Cases ~ PM25, family = poisson, data = DF.Green.noZ)
+plot(DF.Raleigh.noZ$Cases)
+
+summary(Ral.glm.noZ)
+summary(Green.glm.noZ)
+
+predictions <- predict(Ral.glm.noZ, type = "response")
+Results <- eval_results(DF.Raleigh.noZ$Cases, predictions, DF.Raleigh.noZ)
+
+predictions <- predict(Green.glm.noZ, type = "response")
+Results <- eval_results(DF.Green.noZ$Cases, predictions, DF.Green.noZ)
+
+#and some LMs without the 0s
+
+Ral.lm.noZ <- lm(Cases ~ PM25, data = DF.Raleigh.noZ)
+summary(Ral.lm.noZ)
+bc.Ral <- boxcox(Ral.lm.noZ)
+Ral.lam <- bc.Ral$x[which.max(bc.Ral$y)]
+
+Ral.lm2.noZ <- lm(Cases^Ral.lam ~ PM25, data = DF.Raleigh.noZ)
+summary(Ral.lm2.noZ)
+
+Green.lm.noZ <- lm(Cases ~ PM25, data = DF.Green.noZ)
+summary(Green.lm.noZ)
+bc.green <- boxcox(Green.lm.noZ)
+Green.lam <- bc.green$x[which.max(bc.green$y)]
+Green.lm2.noZ <- lm(Cases^Green.lam ~ PM25, data = DF.Green.noZ)
+summary(Green.lm2.noZ)
 ```
+
+Well this didn't really lead to much. Tried the zero inflate and some normal glms. Also tried to just filter the data so it starts when the very first cases of Covid-19 come into play. This seemed to help a bit, all the 0s really mess with the model. 
+
+Something sort of interesting did come out of this though. PM25 seems to be a significant predictor in the Raleigh set but not in the Greenvile set. There was also a negative beta estimate on the PM25 variable. This follows the hypothesis we suspected. In Greenville maybe it makes sense that there is not a significant relation between the two. If there laws were not as stringent there, wouldn't people have continued to go out and drive around? I'm sure plenty of people were breaking the stay at home order, maybe more did it in Greenville than in Raleigh. 
 
 
