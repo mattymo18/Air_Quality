@@ -5,7 +5,6 @@ clean:
 	rm derived_data/*.csv
 	rm derived_graphs/*.csv
 			
-
 derived_graphs/PM25.boxplot.png\
 derived_graphs/Time.Vs.Cases.plot.png\
 derived_graphs/Time.Vs.PM25.plot.png\

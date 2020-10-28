@@ -58,7 +58,7 @@ g5 <- Gdat %>%
         panel.background = element_blank(), axis.line = element_line(colour = "black")) +
   ggtitle("Greenville") +
   theme(plot.title = element_text(hjust = 0.5)) +
-  ylab("Particulate Matter 2.5") +
+  ylab("Covid-19 Cases") +
   xlab("Date")
 
 g6 <- Rdat %>% 
@@ -69,7 +69,7 @@ g6 <- Rdat %>%
         panel.background = element_blank(), axis.line = element_line(colour = "black")) +
   ggtitle("Raleigh") +
   theme(plot.title = element_text(hjust = 0.5)) +
-  ylab("Particulate Matter 2.5") +
+  ylab("Covid-19 Cases") +
   xlab("Date")
 
 Graph3 <- grid.arrange(g5, g6, nrow = 1)
