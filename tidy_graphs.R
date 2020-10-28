@@ -13,6 +13,7 @@ g1 <- Gdat %>%
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black")) +
   ggtitle("Greenville") +
+  ylab("Particulate Matter 2.5") +
   theme(plot.title = element_text(hjust = 0.5))
 g2 <- Rdat %>% 
   ggplot(aes(x = Cases, y = PM25)) +
@@ -20,6 +21,7 @@ g2 <- Rdat %>%
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))  +
   ggtitle("Raleigh") +
+  ylab("Particulate Matter 2.5") +
   theme(plot.title = element_text(hjust = 0.5))
 
 Graph1 <- grid.arrange(g1, g2, nrow = 1)
@@ -43,6 +45,7 @@ g4 <-  Rdat %>%
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black")) +
   ggtitle("Raleigh") +
+  ylab("Particulate Matter 2.5") +
   theme(plot.title = element_text(hjust = 0.5)) +
   ylab("Particulate Matter 2.5") +
   xlab("Date")
@@ -84,6 +87,7 @@ g7 <- PM25.data %>%
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black")) +
   ggtitle("Particulate Matter 2.5") +
+  ylab("Particulate Matter 2.5") +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_color_manual(breaks = c("Greenville", "Raleigh"), values=c("Purple", "Red")) 
 ggsave("derived_graphs/PM25.boxplot.png", plot = g7) 
