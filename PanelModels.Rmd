@@ -1,0 +1,234 @@
+---
+title: "ProjectPanelModels"
+output: html_document
+---
+
+Akshay's data binding Covid data with Raleigh and Greenville
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(gplots)
+library(glmnet)
+library(pscl)
+library(dplyr)
+```
+
+```{r}
+Confirmed_Cases <- read_csv("Source_Data/covid_confirmed_usafacts.csv")
+Raleigh_Clean <- read_csv("Source_Data/Raleigh.Clean.csv")
+Greenville_raw <- read_csv("Source_Data/Greenville.csv")
+```
+
+Composing Raleigh cleaned data
+```{r}
+#Begin_Date = gsub("^0", "", format(min(Raleigh_Clean$utc), format = "%m/%d/%Y"))
+#End_Date = gsub("^0", "", format(max(Raleigh_Clean$utc), format = "%m/%d/%Y"))
+Confirmed_Cases_Raleigh <- subset(Confirmed_Cases, State =="NC" & countyFIPS == 37183, select = `1/22/20`:`10/18/20`)
+
+day <- seq(10,21)
+for (i in day) {
+Confirmed_Cases_Raleigh[[paste("1/", i,"/20",sep = "")]] = 0
+}
+
+Pivoted_Cases <- Confirmed_Cases_Raleigh %>%
+  pivot_longer(cols = `1/22/20`:`1/21/20`,names_to = "utc", values_to = "Cases")
+
+Pivoted_Cases$utc <- as.Date(Pivoted_Cases$utc, "%m/%d/%Y")
+year(Pivoted_Cases$utc) <- 2020
+
+Raleigh_Clean_COVID <- merge(Raleigh_Clean, Pivoted_Cases,by="utc")
+
+#write.csv("derived_data/Raleigh.Clean.Covid.csv")
+```
+
+Composing Greenville cleaned data
+```{r}
+Greenville <- spread(Greenville_raw, key = parameter, value = value)
+
+Greenville$utc = as.Date(Greenville$utc) 
+Greenville$Time <- format(Greenville$utc,"%H:%M:%S")
+
+Greenville <- Greenville %>% dplyr::select(-Time)
+
+Greenville.Clean <- Greenville %>% 
+  group_by(utc, .drop = T) %>% 
+  dplyr::summarise(O3 = mean(o3, na.rm=T), 
+            PM25 = mean(pm25, na.rm=T)) %>% 
+  mutate(Location = "Greenville") %>%
+  dplyr::arrange(utc) %>% 
+  dplyr::select(Location, utc, PM25, O3)
+
+Confirmed_Cases_Greenville <- subset(Confirmed_Cases, State =="SC" & countyFIPS == 45045, select = `1/22/20`:`10/18/20`)
+
+day <- seq(10,21)
+for (i in day) {
+Confirmed_Cases_Greenville[[paste("1/", i,"/20",sep = "")]] = 0
+}
+
+Pivoted_Cases <- Confirmed_Cases_Greenville %>%
+  pivot_longer(cols = `1/22/20`:`1/21/20`,names_to = "utc", values_to = "Cases")
+
+Pivoted_Cases$utc <- as.Date(Pivoted_Cases$utc, "%m/%d/%Y")
+year(Pivoted_Cases$utc) <- 2020
+
+Greenville_Clean_COVID_PM25_O3 <- merge(Greenville.Clean, Pivoted_Cases,by="utc")
+
+#write.csv(Greenville_Clean_COVID_PM25_O3,"derived_data/Greenville_Clean_COVID_PM25_O3.csv")
+```
+
+
+
+Akshay's modelling scratchwork (with addition of population-related regressors)
+
+```{r}
+df.greenville <- read_csv("derived_data/Greenville_Clean_COVID_PM25_O3.csv")
+df.raleigh <- read_csv("derived_data/Raleigh.Clean.Covid.csv")
+DF <- rbind.fill(df.raleigh, df.greenville)
+```
+Data discussion:
+
+We will begin by asserting a hypothesis to justify the treatment of the data and model specification. In this segment of the analysis we hope to predict the future development of new cases by the presence of air contaminants in each location while simultaneously controlling for city-specific effects in the form of a fixed effects term.
+
+Intuition for model construction:
+Pulling from,
+
+@article{doi:10.1056/NEJMoa2002032,
+author = {Guan, Wei-jie and Ni, Zheng-yi and Hu, Yu and Liang, Wen-hua and Ou, Chun-quan and He, Jian-xing and Liu, Lei and Shan, Hong and Lei, Chun-liang and Hui, David S.C. and Du, Bin and Li, Lan-juan and Zeng, Guang and Yuen, Kwok-Yung and Chen, Ru-chong and Tang, Chun-li and Wang, Tao and Chen, Ping-yan and Xiang, Jie and Li, Shi-yue and Wang, Jin-lin and Liang, Zi-jing and Peng, Yi-xiang and Wei, Li and Liu, Yong and Hu, Ya-hua and Peng, Peng and Wang, Jian-ming and Liu, Ji-yang and Chen, Zhong and Li, Gang and Zheng, Zhi-jian and Qiu, Shao-qin and Luo, Jie and Ye, Chang-jiang and Zhu, Shao-yong and Zhong, Nan-shan},
+title = {Clinical Characteristics of Coronavirus Disease 2019 in China},
+journal = {New England Journal of Medicine},
+volume = {382},
+number = {18},
+pages = {1708-1720},
+year = {2020},
+doi = {10.1056/NEJMoa2002032},
+
+URL = { 
+        https://doi.org/10.1056/NEJMoa2002032
+    
+},
+eprint = { 
+        https://doi.org/10.1056/NEJMoa2002032
+    
+}
+
+}
+
+we see that the median incubation period for COVID-19, which is defined as the median time from exposure to symptoms onset, is 4 days. Further, from https://covid19.ncdhhs.gov/dashboard/testing we see that the average turnaround time for testing in the last 32 days was 2.1 days in Raleigh. We will thereby estimate that the approximate time between infection and case reporting is 6 days. It is important to note that this is a very rough estimate, but it will suffice for the sake of this analysis. Our guiding hypothesis may be stated as "the ratio of new cases reported on a particular day to the population in a particular city has a noncausal relation with air quality metrics from 6 days prior controlling for city-specific information." The intuition of each part of this hypothesis is as follows:
+
+1) As previously mentioned, the approximate time between infection and case reporting is 6 days, implying that transmission may be estimated to have occured 6 days prior to the reporting date,
+2) Air quality data provides a usable proxy for human movement and thereby pathogen transmission. However, air quality data fluctuates due to environmental factors as well, leading it to be imperfect.
+3) By controlling for city-specific qualities, variation in the number of new cases caused by location-specific effects may be isolated from the relation between the response and air quality regressors.
+
+Issues:
+
+Now, from the above feature construction we see a few glaring issues. Firstly, the O3 data for the city of Greenville is incomplete with the days from January 10th to March 1st missing. This will be an issue as it prevents the use of O3 as a predictor without omitting this first period of data from the regression analysis. This is only exacerbated by the fact that the response must be lagged by 6 days, leading to a decrease in the samples of both city's. Secondly, the remaining air quality variables aside from PM25 are altogether unavailable for Greenville as well. Finally, readings are altogether missing for Raleigh between the dates of March 30th and May 31st. We will thereby proceed by isolating the dates from the data for which either Greenville or Raleigh `newcasesper` are available, and making use of only the `PM25` and `O3` variables from the air quality data as regressors, supplemented by the fixed-effect regressor.
+
+Data manipulation:
+
+We will begin by taking the first-difference of the variable `Cases` in order to change the response to the number of new cases on each date. The `newcases` variable that will denote the change in the number of cases between two consecutive days will be appended to the row corresponding to the initial date of the pair for the sake of predicting the change in cases in the following day by the regressors during the initial date. We will then take the ratio of these new cases to the estimated population of the cities to normalize the values. The estimated population for Raleigh, NC will be pulled from  https://www.census.gov/data/tables/time-series/demo/popest/2010s-total-cities-and-towns.html#tables and will be based on estimates made by the US Census Bureau. The estimated population for the Greater Greenville area (Greenville County, SC) will be pulled from https://www.census.gov/quickfacts/greenvillecountysouthcarolina.
+These estimates provide the most recent, reliable estimates of these values.
+
+```{r}
+DF$newcases <- NA
+DF$newcases[DF$Location == 'Raleigh'][-1] <- diff(DF$Cases[DF$Location == 'Raleigh'])
+DF$newcases[DF$Location == 'Greenville'][-1] <- diff(DF$Cases[DF$Location == 'Greenville'])
+
+DF$Population <- NA
+DF[DF$Location == "Raleigh",'Population'] <- 474069
+DF[DF$Location == "Greenville",'Population'] <-  523542
+
+DF$newcasesper <- NA
+DF$newcasesper <- DF$newcases/DF$Population
+```
+
+Leading response and composing final model-fitting data:
+```{r}
+DF[DF$Location == "Raleigh",'newcasesper'] <- lead(DF[DF$Location == "Raleigh",'newcasesper'], 6)
+DF[DF$Location == "Greenville",'newcasesper'] <- lead(DF[DF$Location == "Greenville",'newcasesper'], 6)
+
+DFreg <- DF[!is.na(DF$O3) & !is.na(DF$newcasesper),] %>%
+  dplyr::select(X1, utc, Location, O3, PM25, newcasesper, Cases)
+```
+
+The final dataset upon which the regression analysis will be conducted contains 424 observations, with 204 observations being sourced from the Raleigh data and 220 observations being sourced from the Greenville data. Note that the Raleigh data begins on January 10th and is continuous until March 30th, at which point the data was only recorded beginning on June 1st and is once again continuous until October 12th. Furthermore, the Greenville data begins on March 2nd and is continuous through October 12th.
+
+We may now begin visualization of patterns within the data.
+
+```{r}
+plotmeans(newcasesper ~ Location, main="Heterogeneity across cities", data=DFreg)
+
+DFreg[DFreg$Location == "Greenville",] %>% 
+  ggplot(aes(x = O3, y = newcasesper, color = utc)) +
+  geom_point(alpha = .5) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))  +
+  ggtitle("Greenville") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+DFreg[DFreg$Location == "Raleigh",] %>% 
+  ggplot(aes(x = O3, y = newcasesper, color = utc)) +
+  geom_point(alpha = .5) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))  +
+  ggtitle("Raleigh") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+DFreg[DFreg$Location == "Greenville",] %>% 
+  ggplot(aes(x = PM25, y = newcasesper, color = utc)) +
+  geom_point(alpha = .5) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))  +
+  ggtitle("Greenville") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+DFreg[DFreg$Location == "Raleigh",] %>% 
+  ggplot(aes(x = PM25, y = newcasesper, color = utc)) +
+  geom_point(alpha = .5) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"))  +
+  ggtitle("Raleigh") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+plot(DFreg[DFreg$Location == "Raleigh",]$Cases)
+plot(DFreg[DFreg$Location == "Greenville",]$Cases)
+hist(DFreg[DFreg$Location == "Raleigh",]$newcasesper)
+hist(DFreg[DFreg$Location == "Greenville",]$newcasesper)
+```
+
+
+
+```{r}
+fixed_effect1 <- lm(newcasesper ~ PM25 + O3 + factor(Location), DFreg)
+summary(fixed_effect1)
+
+fixed_effect2 <- lm(newcasesper ~ PM25 + O3 + factor(Location) - 1, DFreg)
+summary(fixed_effect2)
+
+fixed_effect3 <- lm(newcasesper ~ PM25 + factor(Location) - 1, DFreg)
+summary(fixed_effect3)
+
+fixed_effect4 <- lm(newcasesper ~ PM25 + factor(Location), DFreg)
+summary(fixed_effect4)
+
+Qpoisson1 <- glm(Cases ~ PM25 + O3 + factor(Location) - 1, family = quasipoisson, data = DFreg)
+summary(Qpoisson1)
+
+Poisson1 <- glm(Cases ~ PM25 + O3 + factor(Location) - 1, family = poisson, data = DFreg)
+summary(Poisson1)
+
+Poisson2 <- glm(Cases ~ PM25 + O3 + factor(Location), family = poisson, data = DFreg)
+summary(Poisson2)
+```
+
+
+We may now begin forming our panel regression model. Fixed-effect models will be considered and a Hausman test will be performed to verify correlation between entity-specific attributes and the other individual regressors.
+
+We next begin considering the viability of a panel regression model to capture entity-specific (city-specific) variability within the model.
+
+Addition of population/demographic-based predictor:
+
+Of particular interest in our analysis is the impact of cultural and socioeconomic disparities in our chosen locations on the estimated relation between COVID cases and local air quality. For the sake of internalizing these differences within our model consideration a fixed effect term will be added within our models. This will function as a conditional intercept term based on location.
