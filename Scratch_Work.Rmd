@@ -118,6 +118,7 @@ plot(rtime, Rcase, xlab="Time", ylab="Raleigh Corona Case Count", col="purple", 
 
 ggplot version of above
 ```{r}
+#switch some axis
 Gdat<-read.csv("derived_data/Greenville.Clean.Covid.csv")
 Rdat<-read.csv("derived_data/Raleigh.Clean.Covid.csv")
 
