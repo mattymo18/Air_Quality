@@ -359,4 +359,51 @@ Well this didn't really lead to much. Tried the zero inflate and some normal glm
 
 Something sort of interesting did come out of this though. PM25 seems to be a significant predictor in the Raleigh set but not in the Greenvile set. There was also a negative beta estimate on the PM25 variable. This follows the hypothesis we suspected. In Greenville maybe it makes sense that there is not a significant relation between the two. If there laws were not as stringent there, wouldn't people have continued to go out and drive around? I'm sure plenty of people were breaking the stay at home order, maybe more did it in Greenville than in Raleigh. 
 
+## Binaries included in model
 
+```{r}
+#filter data 
+#Gdat.noZ <- filter(Gdat, Gcase>0)
+#Rdat.noZ <- filter(Rdat, Rcase>0)
+#square root transform
+sqrtcase<-sqrt(Gcase)
+sqrtCase<-sqrt(Rcase)
+
+#stay at home binary 
+#Greenville SAH ran from 4-7 to 5-4
+#Raleigh SAH ran from 3-30 to 5-22
+#unfortunately we are missing data from most of raleigh SAH
+SAHG<-integer(length(t))
+SAHR<-integer(length(d))
+for (i in 88:114){
+  SAHG[i]<-1
+}
+SAHG<-factor(SAHG)
+SAHR[77:78]<-1
+#Bar close mandate binary
+#Bar
+BG<-integer(length(t))
+for (i in 81:114){
+  BG[i]<-1
+}
+BG<-factor(BG)
+BR<-integer(length(d))
+for (i in 64:196){
+  BR[i]<-1
+}
+BR<-factor(BR)
+  
+
+
+reg1<-lm(Gcase~Gpm+SAHG+BG)
+summary(reg1)
+
+reg2<-lm(Rcase~Rpm+BR)
+summary(reg2)
+
+```
+
+##
+Reflection
+
+I believe flipping the model to now be an epidemiological analysis is more informative. In as much as particulate air matter includes particles commonly emitted from automobiles, industry exhaust, and active construction sites, this could be perceived as a proxy for "life per the status quo" or continuing to "go out" despite social distancing precaution. Greenville will yield our most intuitive interpretations, as Raleigh contains a hole in the data during the crucial stay at home period.  This likely puts undue influence on the latter case values.  However, for Greenville we see a highly significant and positive coefficient for particulate matter.  This would seem to indicate that as particulate air matter rises (i.e people continue to live life per their usual busy and intermingled lives) corona cases continue to increase.  The fact that Greenville experiences a significant positive coefficient while Raleigh has a negative (albeit starkly non-significant one) coincides with our intuition that Greenville's less stringent regulation and abidance results in more rapid spread.  It is also worth noting for Greenville that the bar closure mandate has a nearly significant and negative coefficient indicating that the introduction of bar closures results in lessened spread.  Such a regulation (state sanctioned bar closings) is more easily enforced that a broad stay at home order that leaves much to discretionary autonomy.  This disparity is reflected in Greenville's stay at home order being almost entirely indistinguishable from a zero effect.  Put another way, the stay at home order was fairly inconsequential; people did not adhere to it.  Taking a second to compare these results to Raleigh, it is again important to know that these results may be slightly skewed by missing data.  This is the best explanation I have been able to surmise regarding a significant positive bar closure binary.  It seems massively counterintutive that closing bars would be correlated with a massive and distinguishable spike in corona cases.  Now, it could be the case the left bereft of a regulated bar at which libations may be enjoyed people began having more unregulated, congregated house parties, and this resulted in heightened spread.  However, what seems far more likely is that the hole in the data corresponding to a stay at home order (and also a large portion of the time period corresponding to bar closures) places undue influence on binary 1's after the stay at home order had been lifted (bars were still closed) and people gradually began to naturally spread the virus again.  
