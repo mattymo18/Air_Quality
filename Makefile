@@ -5,6 +5,13 @@ clean:
 	rm derived_data/*.csv
 	rm derived_graphs/*.csv
 			
+derived_graphs/ACF.plot.png:\
+ derived_data/Greenville.Clean.Covid.csv\
+ derived_data/Raleigh.Clean.Covid.csv\
+ ACF_plots.R
+	Rscript ACF_plots.R
+
+
 derived_graphs/PM25.boxplot.png\
 derived_graphs/Time.Vs.Cases.plot.png\
 derived_graphs/Time.Vs.PM25.plot.png\
