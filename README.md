@@ -69,7 +69,7 @@ Preliminary Plots
 
 ![](derived_graphs/PM25.boxplot.png)
 
-![](derived_graphs/ACF.plot.png)
+![](derived_graphs/ACF.plot.pn)
 
 
 
