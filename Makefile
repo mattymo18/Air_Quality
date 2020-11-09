@@ -21,6 +21,9 @@ derived_graphs/PM25.Vs.Cases.plot.png:\
  tidy_graphs.R
 	Rscript tidy_graphs.R
 
+derived_data/DF.Final.csv\
+derived_data/DF.Final.No.Binary.csv\
+derived_data/Greenville_Clean_COVID_PM25_O3.csv\
 derived_data/Greenville.Clean.csv\
 derived_data/Raleigh.Clean.csv:\
  Source_Data/Raleigh_Air.csv\

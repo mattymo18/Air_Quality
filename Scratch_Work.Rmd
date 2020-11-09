@@ -402,11 +402,37 @@ reg2<-lm(Rcase~Rpm+BR)
 summary(reg2)
 
 ```
-
 ##
 Reflection
 
 I believe flipping the model to now be an epidemiological analysis is more informative. In as much as particulate air matter includes particles commonly emitted from automobiles, industry exhaust, and active construction sites, this could be perceived as a proxy for "life per the status quo" or continuing to "go out" despite social distancing precaution. Greenville will yield our most intuitive interpretations, as Raleigh contains a hole in the data during the crucial stay at home period.  This likely puts undue influence on the latter case values.  However, for Greenville we see a highly significant and positive coefficient for particulate matter.  This would seem to indicate that as particulate air matter rises (i.e people continue to live life per their usual busy and intermingled lives) corona cases continue to increase.  The fact that Greenville experiences a significant positive coefficient while Raleigh has a negative (albeit starkly non-significant one) coincides with our intuition that Greenville's less stringent regulation and abidance results in more rapid spread.  It is also worth noting for Greenville that the bar closure mandate has a nearly significant and negative coefficient indicating that the introduction of bar closures results in lessened spread.  Such a regulation (state sanctioned bar closings) is more easily enforced that a broad stay at home order that leaves much to discretionary autonomy.  This disparity is reflected in Greenville's stay at home order being almost entirely indistinguishable from a zero effect.  Put another way, the stay at home order was fairly inconsequential; people did not adhere to it.  Taking a second to compare these results to Raleigh, it is again important to know that these results may be slightly skewed by missing data.  This is the best explanation I have been able to surmise regarding a significant positive bar closure binary.  It seems massively counterintutive that closing bars would be correlated with a massive and distinguishable spike in corona cases.  Now, it could be the case the left bereft of a regulated bar at which libations may be enjoyed people began having more unregulated, congregated house parties, and this resulted in heightened spread.  However, what seems far more likely is that the hole in the data corresponding to a stay at home order (and also a large portion of the time period corresponding to bar closures) places undue influence on binary 1's after the stay at home order had been lifted (bars were still closed) and people gradually began to naturally spread the virus again.  
+
+Redo Andy's with Akshay Data
+```{r}
+DF <- read.csv("derived_data/DF.Final.No.Binary.csv")
+
+#lets add binaries for stay at home and bars closing
+DF = DF %>% 
+  mutate(numerical_day = as.numeric(utc))
+DF.full = DF %>% 
+  mutate(Stay_At_Home = ifelse(DF$Location == "Greenville" & 
+                                DF$numerical_day >= 85 & 
+                                DF$numerical_day <= 111, 1, ifelse(DF$Location == "Raleigh" &
+                                                                  DF$numerical_day >= 77 &
+                                                                  DF$numerical_day <= 139, 1, 0))) %>% 
+  mutate(Bar_Close = ifelse(DF$Location == "Greenville" &
+                              DF$numerical_day >= 78 &
+                              DF$numerical_day <= 111, 1, ifelse(DF$Location == "Raleigh" &
+                                                                DF$numerical_day >= 66 &
+                                                                DF$numerical_day <= 257, 1, 0))) %>% 
+  select(-numerical_day)
+DF.full$Stay_At_Home <- factor(DF.full$Stay_At_Home)
+DF.full$Bar_Close <- factor(DF.full$Bar_Close)
+```
+
+```{r}
+
+```
 
 Autocorrelation exploration and plots
 ```{r}
