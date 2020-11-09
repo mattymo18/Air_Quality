@@ -472,8 +472,10 @@ Matt Modeling with full DF
 ```{r}
 library(tidyverse)
 library(caret)
-DF.Full <- read.csv("derived_data/DF.Final.csv")
-DF.Full %>% filter(Stay_At_Home > 0)
+DF.Full <- read.csv("derived_data/DF.Final.csv") %>% 
+  mutate(New_Cases = Cases - lag(Cases))
+DF.Full$New_Cases[205] = 0
+DF.Full$New_Cases[1] = 0
 DF.Green <- DF.Full %>% 
   filter(Location == "Greenville") 
 DF.Ral <- DF.Full %>% 
@@ -481,38 +483,46 @@ DF.Ral <- DF.Full %>%
 
 ```
 
-Model training with caret
+Model training
 ```{r}
-# DF.Green$Stay_At_Home <- factor(DF.Green$Stay_At_Home)
-# DF.Green$Bar_Close <- factor(DF.Green$Bar_Close)
 set.seed = 18
-trainIndex <- createDataPartition(y = DF.Green$newcasesper, p=.8, times = 1, list = F)
-train_ctrl <- trainControl(method = "repeatedcv", number = 50)
-DF.Green.Test <- DF.Green[-trainIndex, ]
+trainIndex <- createDataPartition(y = DF.Full$New_Cases, p=.8, times = 1, list = F)
 
-glm.test <- train(newcasesper ~ O3 + 
-                    PM25 + 
-                    Stay_At_Home +
-                    Bar_Close, 
-                  data = DF.Green[trainIndex, ], 
-                  metod = "glm", 
-                  family = "poisson", 
-                  trControl = train_ctrl)
-glm.test
-plot(glm.test)
+glm1 <- glm(New_Cases ~ O3 +
+              PM25 +
+              factor(Stay_At_Home) +
+              factor(Bar_Close) +
+              factor(Location) - 1, 
+            data = DF.Full[trainIndex, ], 
+            family = poisson)
+summary(glm1)
 
+
+plot(glm1)
 source("Utils.R")
 
-preds <- predict(glm.test, newdata = DF.Green.Test, type = "raw")
-Results <- eval_results(DF.Green.Test$newcasesper, preds, DF.Green.Test)
+preds <- predict(glm1, newdata = DF.Full[-trainIndex, ], type = "response")
+eval_results(DF.Full$New_Cases[-trainIndex], preds, DF.Full)
 
+#we can try some interactions
+glm2 <- glm(New_Cases ~ (O3 +
+              PM25 +
+              factor(Stay_At_Home) +
+              factor(Bar_Close) +
+              factor(Location))^2 - 1, 
+            data = DF.Full[trainIndex, ], 
+            family = poisson)
+summary(glm2) #pretty tough to interpret, but i think location with binary interactions should be involved
 
-glm1 <- glm(newcasesper ~ O3 + 
-                    PM25 + 
-                    Stay_At_Home +
-                    Bar_Close, 
-                  data = DF.Green[trainIndex, ], 
-                  family = "poisson")
-summary(glm1)
+glm3 <- glm(New_Cases ~ O3 +
+              PM25 +
+              factor(Stay_At_Home) +
+              factor(Bar_Close) +
+              factor(Location) +
+              factor(Location)*factor(Bar_Close) +
+              factor(Location)*factor(Stay_At_Home) - 1, 
+            data = DF.Full[trainIndex, ], 
+            family = poisson)
+summary(glm3)
 ```
 
