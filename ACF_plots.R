@@ -91,6 +91,6 @@ g4 <- RPM.acf.df %>%
   ylab("ACF") +
   ggtitle("Raleigh PM 2.5")
 
-Graph1 <- grid.arrange(grobs = list(g1, g2, g3, g4), nrow = 2)
+Graph1 <- grid.arrange(grobs = list(g1, g3, g2, g4), nrow = 2)
 ggsave("derived_graphs/ACF.plot.png", plot = Graph1)
 
