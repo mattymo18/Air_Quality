@@ -430,9 +430,7 @@ DF.full$Stay_At_Home <- factor(DF.full$Stay_At_Home)
 DF.full$Bar_Close <- factor(DF.full$Bar_Close)
 ```
 
-```{r}
 
-```
 
 Autocorrelation exploration and plots
 ```{r}
@@ -467,5 +465,54 @@ g1 <- G.acf.df %>%
   xlab("Lag") +
   ylab("ACF") +
   ggtitle("Greenville Cases")
+```
+
+Matt Modeling with full DF
+
+```{r}
+library(tidyverse)
+library(caret)
+DF.Full <- read.csv("derived_data/DF.Final.csv")
+DF.Full %>% filter(Stay_At_Home > 0)
+DF.Green <- DF.Full %>% 
+  filter(Location == "Greenville") 
+DF.Ral <- DF.Full %>% 
+  filter(Location == "Raleigh")
+
+```
+
+Model training with caret
+```{r}
+# DF.Green$Stay_At_Home <- factor(DF.Green$Stay_At_Home)
+# DF.Green$Bar_Close <- factor(DF.Green$Bar_Close)
+set.seed = 18
+trainIndex <- createDataPartition(y = DF.Green$newcasesper, p=.8, times = 1, list = F)
+train_ctrl <- trainControl(method = "repeatedcv", number = 50)
+DF.Green.Test <- DF.Green[-trainIndex, ]
+
+glm.test <- train(newcasesper ~ O3 + 
+                    PM25 + 
+                    Stay_At_Home +
+                    Bar_Close, 
+                  data = DF.Green[trainIndex, ], 
+                  metod = "glm", 
+                  family = "poisson", 
+                  trControl = train_ctrl)
+glm.test
+plot(glm.test)
+
+source("Utils.R")
+
+preds <- predict(glm.test, newdata = DF.Green.Test, type = "raw")
+Results <- eval_results(DF.Green.Test$newcasesper, preds, DF.Green.Test)
+
+
+glm1 <- glm(newcasesper ~ O3 + 
+                    PM25 + 
+                    Stay_At_Home +
+                    Bar_Close, 
+                  data = DF.Green[trainIndex, ], 
+                  family = "poisson")
+summary(glm1)
 ```
 

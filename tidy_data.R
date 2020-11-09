@@ -145,23 +145,20 @@ DFreg <- DF[!is.na(DF$O3) & !is.na(DF$newcasesper),] %>%
 
 write.csv(DFreg, "derived_data/DF.Final.No.Binary.csv")
 
-DF <- DFreg
 
 #lets add binaries for stay at home and bars closing
-DF = DF %>% 
-  mutate(numerical_day = as.numeric(utc))
-DF.full = DF %>% 
-  mutate(Stay_At_Home = ifelse(DF$Location == "Greenville" & 
-                                 DF$numerical_day >= 85 & 
-                                 DF$numerical_day <= 111, 1, ifelse(DF$Location == "Raleigh" &
-                                                                      DF$numerical_day >= 77 &
-                                                                      DF$numerical_day <= 139, 1, 0))) %>% 
-  mutate(Bar_Close = ifelse(DF$Location == "Greenville" &
-                              DF$numerical_day >= 78 &
-                              DF$numerical_day <= 111, 1, ifelse(DF$Location == "Raleigh" &
-                                                                   DF$numerical_day >= 66 &
-                                                                   DF$numerical_day <= 257, 1, 0))) %>% 
-  select(-numerical_day)
+DF.full = DFreg %>% 
+  mutate(Stay_At_Home = ifelse(DFreg$Location == "Greenville" & 
+                                 DFreg$X1 >= 88 & 
+                                 DFreg$X1 <= 114, 1, ifelse(DFreg$Location == "Raleigh" &
+                                                                      DFreg$X1 >= 77 &
+                                                                      DFreg$X1 <= 78, 1, 0))) %>% 
+  mutate(Bar_Close = ifelse(DFreg$Location == "Greenville" &
+                              DFreg$X1 >= 81 &
+                              DFreg$X1<= 114, 1, ifelse(DFreg$Location == "Raleigh" &
+                                                                   DFreg$X1 >= 64 &
+                                                                   DFreg$X1 <= 196, 1, 0))) %>% 
+  select(-X1)
 DF.full$Stay_At_Home <- factor(DF.full$Stay_At_Home)
 DF.full$Bar_Close <- factor(DF.full$Bar_Close)
 
