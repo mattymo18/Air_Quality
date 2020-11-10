@@ -609,4 +609,58 @@ summary(glm5) #sort of counterintuitive results
 plot(glm5) #78 could be an outlier
 ```
 
-Really didn't get much from this. Coeffs on models are counterintuitive and models have very poor predicting power. Can't think of what to really do now, i feel like this is the right type of model to use, but alas we are not getting much from them. 
+Really didn't get much from this. Coeffs on models are counterintuitive and models have very poor predicting power. Can't think of what to really do now, i feel like this is the right type of model to use, but alas we are not getting much from them. Variable selection really won't do much since all the variables are significant. Let's try some pcr and pca. 
+
+PCA and other clustering stuff
+```{r}
+set.seed = 18
+library(ggfortify)
+library(cluster)
+library(Rtsne)
+library(factoextra)
+library(tidyverse)
+
+DF.Full <- read.csv("derived_data/DF.Final.csv") %>% 
+  mutate(New_Cases = Cases - lag(Cases))
+DF.Full$New_Cases[205] = 0
+DF.Full$New_Cases[1] = 0
+DF.Green <- DF.Full %>% 
+  filter(Location == "Greenville") 
+DF.Ral <- DF.Full %>% 
+  filter(Location == "Raleigh")
+
+
+fviz_nbclust(DF.Full %>% select(O3, PM25), kmeans,
+             method = "silhouette")#this suggests there might be two clusters
+fviz_nbclust(DF.Full %>% select(O3, PM25), kmeans,
+             method = "gap_stat") #this sorta means that there is only 1 cluster...
+fviz_nbclust(DF.Full %>% select(O3, PM25), kmeans,
+             method = "wss")
+
+
+fit1 <- Rtsne(DF.Full %>% select(O3, PM25, Bar_Close), dims = 3)
+g1 <- ggplot(fit1$Y %>% as.data.frame() %>% as_tibble(), aes(V1,V2)) +
+  geom_point(aes(color=DF.Full$Location))
+
+cc <- kmeans(DF.Full %>% select(O3, PM25), 2)
+g2 <- ggplot(fit1$Y %>% as.data.frame() %>% as_tibble() %>% mutate(label=cc$cluster),aes(V1,V2)) +
+  geom_point(aes(color=factor(label)))
+
+pcs <- prcomp(DF.Full %>% select(O3, PM25), scale. = T)
+pcs
+summary(pcs)
+g2 <- autoplot(pcs, loadings=T, loadings.colour = 'blue', loadings.label.size = 6)
+g3 <- autoplot(pam(DF.Full %>% select(O3, PM25), 2), 
+               frame = T, fram.type = 'norm')
+pam1 <- pam(DF.Full %>% select(O3, PM25), 2)
+pam1$clusinfo
+pam1$medoids
+g4 <- autoplot(silhouette(pam(DF.Full %>% select(O3, PM25), 2)))
+
+g1
+g2
+g3
+g4
+```
+
+Really didn't get much out of this which is too bad, I was hoping for two clear clustering where one ws raleigh and the other was greenville. Pam clustering probably did the best, but it still did not do very well according to silhouette. Well, i guess that sorta concludes my clutering analysis, I'll integrate this into the build system tomorrow. 
