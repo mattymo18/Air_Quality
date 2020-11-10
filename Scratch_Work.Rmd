@@ -481,6 +481,10 @@ DF.Green <- DF.Full %>%
 DF.Ral <- DF.Full %>% 
   filter(Location == "Raleigh")
 
+# DF.Green$New_Cases <- scale(DF.Green$New_Cases)
+# DF.Ral$New_Cases <- scale(DF.Ral$New_Cases)
+# 
+# DF.Full <- rbind(DF.Ral, DF.Green)
 ```
 
 Model training
@@ -526,3 +530,6 @@ glm3 <- glm(New_Cases ~ O3 +
 summary(glm3)
 ```
 
+So, I tried to combine the variables you both went with into some models that were similar to Akshay, but they don't seem to have a great predictive power and some of the results I'm getting are a bit counterintuitive, I think largely due to the mising data in the Raleigh case. This is causing some outliers and for the stay at home variable for raleigh to just not be useful at all. I think I'll try separate models for for green and ral instead of using a location factor. The combination bar closing and loaction seemed like a resonable idea, but the raleigh data again had issues. 
+
+I ended up building a new variable titled `New_Cases` which is just the number of cases - the number of cases the day before. I tried to normalize these using a centering but then I couldn't do a poisson glm for it. So I'm not going to do that, instead I'll try to use the newcasesper Akshay made. 
