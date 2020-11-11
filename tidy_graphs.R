@@ -109,11 +109,13 @@ g8 <- Full.data %>%
 ggsave("derived_graphs/Total.Cases.boxplot.png", plot = g8)
 
 Full.data = Full.data %>% 
-  mutate(New_Cases = Cases - lag(Cases))
+  mutate(New_Cases = Cases - lag(Cases)) 
 Full.data$New_Cases[205] = 0
 Full.data$New_Cases[1] = 0
+Full.data = Full.data %>% 
+  filter(New_Cases > 0)
 
-g9 <- Full.data %>%  
+g9 <- Full.data %>% 
   ggplot(aes(y = New_Cases, x = Location)) +
   geom_boxplot(aes(color = Location)) +
   geom_jitter(aes(color = Location), alpha = .5) +
