@@ -638,7 +638,7 @@ fviz_nbclust(DF.Full %>% select(O3, PM25), kmeans,
              method = "wss")
 
 
-fit1 <- Rtsne(DF.Full %>% select(O3, PM25, Bar_Close), dims = 3)
+fit1 <- Rtsne(DF.Full %>% select(O3, PM25, Bar_Close), dims = 2)
 g1 <- ggplot(fit1$Y %>% as.data.frame() %>% as_tibble(), aes(V1,V2)) +
   geom_point(aes(color=DF.Full$Location))
 

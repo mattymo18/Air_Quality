@@ -5,6 +5,16 @@ clean:
 	rm derived_data/*.csv
 	rm derived_graphs/*.csv
 			
+derived_graphs/cluster.TSNE.plot.png\
+derived_graphs/cluster.kmeans.plot.png\
+derived_graphs/cluster.PCA.plot.png\
+derived_graphs/cluster.PAM.Frame.plot.png\
+derived_graphs/cluster.PAM.Silhouette.plot.png\
+derived_graphs/cluster.determination.png:\
+ derived_data/DF.Final.csv\
+ cluster_data.R
+	Rscript cluster_data.R
+
 derived_graphs/ACF.plot.png:\
  derived_data/Greenville.Clean.Covid.csv\
  derived_data/Raleigh.Clean.Covid.csv\
