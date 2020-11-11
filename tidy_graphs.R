@@ -90,4 +90,38 @@ g7 <- PM25.data %>%
   ylab("Particulate Matter 2.5") +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_color_manual(breaks = c("Greenville", "Raleigh"), values=c("Purple", "Red")) 
-ggsave("derived_graphs/PM25.boxplot.png", plot = g7) 
+ggsave("derived_graphs/PM25.boxplot.png", plot = g7)
+
+Full.data <- read.csv("derived_data/DF.Final.csv")
+
+
+g8 <- Full.data %>% 
+  ggplot(aes(y = Cases, x = Location)) +
+  geom_boxplot(aes(color = Location)) +
+  geom_jitter(aes(color = Location), alpha = .5) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  ggtitle("Number of Total Cases") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("Cases") +
+  scale_color_manual(breaks = c("Greenville", "Raleigh"), values=c("Purple", "Red"))
+
+ggsave("derived_graphs/Total.Cases.boxplot.png", plot = g8)
+
+Full.data = Full.data %>% 
+  mutate(New_Cases = Cases - lag(Cases))
+Full.data$New_Cases[205] = 0
+Full.data$New_Cases[1] = 0
+
+g9 <- Full.data %>%  
+  ggplot(aes(y = New_Cases, x = Location)) +
+  geom_boxplot(aes(color = Location)) +
+  geom_jitter(aes(color = Location), alpha = .5) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  ggtitle("Number of Cases per Day") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylab("Cases per Day") +
+  scale_color_manual(breaks = c("Greenville", "Raleigh"), values=c("Purple", "Red"))
+
+ggsave("derived_graphs/Per.Day.Cases.boxplot.png", plot = g9)

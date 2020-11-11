@@ -609,7 +609,7 @@ summary(glm5) #sort of counterintuitive results
 plot(glm5) #78 could be an outlier
 ```
 
-Really didn't get much from this. Coeffs on models are counterintuitive and models have very poor predicting power. Can't think of what to really do now, i feel like this is the right type of model to use, but alas we are not getting much from them. Variable selection really won't do much since all the variables are significant. Let's try some pcr and pca. 
+Really didn't get much from this. Coeffs on models are counterintuitive and models have very poor predicting power. Can't think of what to really do now, I feel like this is the right type of model to use, but alas we are not getting much from them. Variable selection really won't do much since all the variables are significant. Let's try some pcr and pca. 
 
 PCA and other clustering stuff
 ```{r}

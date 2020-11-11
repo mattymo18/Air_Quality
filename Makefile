@@ -3,7 +3,7 @@
 clean:
 
 	rm derived_data/*.csv
-	rm derived_graphs/*.csv
+	rm derived_graphs/*.png
 			
 derived_graphs/cluster.TSNE.plot.png\
 derived_graphs/cluster.kmeans.plot.png\
@@ -22,6 +22,8 @@ derived_graphs/ACF.plot.png:\
 	Rscript ACF_plots.R
 
 
+derived_graphs/Total.Cases.boxplot.png\
+derived_graphs/Per.Day.Cases.boxplot.png\
 derived_graphs/PM25.boxplot.png\
 derived_graphs/Time.Vs.Cases.plot.png\
 derived_graphs/Time.Vs.PM25.plot.png\
