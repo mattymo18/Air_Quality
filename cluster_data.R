@@ -28,13 +28,8 @@ g2 <- fviz_nbclust(DF.Full %>% select(O3, PM25), kmeans,
                                           panel.background = element_blank(), 
                                           axis.line = element_line(colour = "black")) + ggtitle("Gap Stat Method")
 #this sorta means that there is only 1 cluster...
-g3 <- fviz_nbclust(DF.Full %>% select(O3, PM25), kmeans,
-             method = "wss") + theme(panel.grid.major = element_blank(), 
-                                     panel.grid.minor = element_blank(),
-                                     panel.background = element_blank(), 
-                                     axis.line = element_line(colour = "black")) + ggtitle("WSS Method")
 
-graph1 <- grid.arrange(grobs = list(g1, g2, g3), nrow = 1)
+graph1 <- grid.arrange(grobs = list(g1, g2), nrow = 1)
 ggsave("derived_graphs/cluster.determination.png", plot = graph1)
 
 

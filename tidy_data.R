@@ -161,5 +161,6 @@ DF.full = DFreg %>%
   select(-X1)
 DF.full$Stay_At_Home <- factor(DF.full$Stay_At_Home)
 DF.full$Bar_Close <- factor(DF.full$Bar_Close)
+DF.Full <-  DF.full[-c(72:77)]
 
-write.csv(DF.full, "derived_data/DF.Final.csv")
+write.csv(DF.Full, "derived_data/DF.Final.csv")
