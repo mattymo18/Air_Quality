@@ -1,0 +1,149 @@
+---
+title: "RegressionWithBinaries"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r}
+library(tidyverse)
+library(lubridate)
+library(gplots)
+library(glmnet)
+library(pscl)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(broom)
+library(leaps)
+library(olsrr)
+```
+
+```{r}
+DF <- read_csv("derived_data/DF.Final.csv")
+```
+
+Initializing function for use in evaluating RMSE
+```{r}
+rmse=function(x,y){sqrt(mean((x-y)^2))}
+```
+
+Visualizing the distribution of the predictors `PM25` and `O3` relative to location and the response
+```{r}
+ggplot(DF, aes(x=PM25, y=newcasesper, color=Location)) + geom_point()
+ggplot(DF, aes(x=O3, y=newcasesper, color=Location)) + geom_point()
+```
+
+
+Initial Panel regression model with non-zero intercept
+```{r}
+fixed_effect1 <- lm(newcasesper ~ PM25 + O3 + factor(Location) + Stay_At_Home + Bar_Close, DF)
+summary(fixed_effect1)
+```
+
+Selection methods applied to non-zero intercept model
+```{r}
+#Create numeric binary variable for location with Raleigh = 1 and Greenville = 0.
+DF$loc <- ifelse(DF$Location == "Raleigh", 1, 0)
+
+#Initialize train and test sets. These will be randomized with 75% of observations composing the training set and 25% of the observations composing the test set.
+
+#75% of the sample size
+smp_size <- floor(0.75 * nrow(DF))
+
+#Setting a seed for the sake of reproducibility.
+set.seed(123)
+train_ind <- sample(seq_len(nrow(DF)), size = smp_size)
+
+#Form test and train sets
+train <- DF[train_ind, ]
+test <- DF[-train_ind, ]
+
+reglm1 <- regsubsets(newcasesper ~ PM25 + O3 + factor(Location) + Stay_At_Home + Bar_Close, train)
+lm1s <- summary(reglm1)
+lm1 <- lm(newcasesper ~ PM25 + O3 + factor(Location) + Stay_At_Home + Bar_Close, train)
+
+#AIC
+fixed_effect1.1 <- step(lm1)
+
+#Adjusted R^2
+lm1s$which[which.max(lm1s$adjr2),]
+plot(2:6,lm1s$adjr2,xlab="No. of Parameters",ylab="Adjusted R-square")
+
+#Mallow's Cp
+lm1s$which[which.min(lm1s$cp), ]
+plot(2:6,lm1s$cp,xlab="No. of Parameters",ylab="Cp Statistic")
+abline(0,1)
+
+#From the above variable selection methods we see that the model that optimizes the Adjusted R^2 metric is the one predicting `newcasesper` by an intercept term and the variables `PM25`, `O3`, `factor(Location)Raleigh`, `Stay_At_Home`, and `Bar_Close`. The model that optimizes the AIC and Mallow's Cp statistic is the one predicting `newcasesper` by an intercept term and the variables `PM25`, `factor(Location)Raleigh`, `Stay_At_Home`, and `Bar_Close`. However, the statistic for this model is slightly above the Cp = p line when considering the Mallow's Cp metric. We will thereby proceed by considering both of these models.
+
+fixed_effect_intercept1 <- lm(newcasesper ~ O3 + PM25 + factor(Location) + Stay_At_Home + Bar_Close, train)
+fixed_effect_intercept2 <- lm(newcasesper ~ PM25 + factor(Location) + Stay_At_Home + Bar_Close, train)
+ 
+#Calculating the prediction RMSE on the test set
+rmse(fitted(fixed_effect_intercept1), train$newcasesper)
+rmse(predict(fixed_effect_intercept1,test),test$newcasesper)
+
+rmse(fitted(fixed_effect_intercept2), train$newcasesper)
+rmse(predict(fixed_effect_intercept2,test),test$newcasesper)
+
+#Considering the residual Q-Q plot to visualize any violations of the normality assumption.
+ols_plot_resid_qq(fixed_effect_intercept1)
+ols_plot_resid_qq(fixed_effect_intercept2)
+
+#Examining DFBETA plots to identify points particularly influential in estimating each parameter.
+ols_plot_dfbetas(fixed_effect_intercept1)
+ols_plot_dfbetas(fixed_effect_intercept2)
+
+#Determining high leverage points using Cook's Distance. 
+ols_plot_cooksd_bar(fixed_effect_intercept1)
+ols_plot_cooksd_bar(fixed_effect_intercept2)
+
+summary(fixed_effect_intercept1)
+summary(fixed_effect_intercept2)
+```
+
+Panel regression models with zero intercept
+```{r}
+fixed_effect2 <- lm(newcasesper ~ PM25 + O3 + Stay_At_Home + Bar_Close + loc - 1, train)
+summary(fixed_effect2)
+```
+
+Selection methods applied to non-zero intercept model
+```{r}
+reglm2 <- regsubsets(newcasesper ~ PM25 + O3 + Stay_At_Home + Bar_Close + loc, train, intercept = F)
+lm2s <- summary(reglm2)
+lm2 <- lm(newcasesper ~ PM25 + O3 + Stay_At_Home + Bar_Close + loc - 1, train)
+
+#AIC
+fixed_effect2.1 <- step(lm2)
+summary(fixed_effect2.1)
+
+#Adjusted R^2
+lm2s$which[which.max(lm2s$adjr2),]
+plot(1:5,lm2s$adjr2,xlab="No. of Parameters",ylab="Adjusted R-square")
+
+
+#Mallow's Cp
+lm2s$which[which.min(lm2s$cp), ]
+plot(1:5,lm1s$cp,xlab="No. of Parameters",ylab="Cp Statistic")
+abline(0,1)
+
+#From the above variable selection methods we see that the zero-intercept model that optimizes the Adjusted R^2, AIC, and Mallow's Cp metrics is the one predicting `newcasesper` by the variables `PM25`, 'O3', `loc`, `Stay_At_Home`, and `Bar_Close`. In other words, the complete model is the one that optimizes the values of all three variable selection methods. We will thereby proceed by considering this model.
+
+fixed_effect_ni <- lm(newcasesper ~ O3 + PM25 + loc + Stay_At_Home + Bar_Close - 1, train)
+ 
+#Calculating the prediction RMSE on the test set
+rmse(fitted(fixed_effect_ni), train$newcasesper)
+rmse(predict(fixed_effect_ni,test),test$newcasesper)
+
+#Considering the residual Q-Q plot to visualize any violations of the normality assumption.
+ols_plot_resid_qq(fixed_effect_ni)
+
+#Examining DFBETA plots to identify points particularly influential in estimating each parameter.
+ols_plot_dfbetas(fixed_effect_ni)
+
+#Determining high leverage points using Cook's Distance. 
+ols_plot_cooksd_bar(fixed_effect_ni)
+
+summary(fixed_effect_ni)
+```
