@@ -12,3 +12,10 @@ eval_results <- function(true, predicted, df) {
   )
   
 }
+
+
+rmse <- function(x, y)
+{
+  sqrt(mean((x - y)^2))
+  
+  }

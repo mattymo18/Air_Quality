@@ -24,11 +24,13 @@ DF <- read_csv("derived_data/DF.Final.csv")
 
 Initializing function for use in evaluating RMSE
 ```{r}
+# MCJ: I added this to Utils.R, you can use source("Utils.r") to use this instead for the future
 rmse=function(x,y){sqrt(mean((x-y)^2))}
 ```
 
 Visualizing the distribution of the predictors `PM25` and `O3` relative to location and the response
 ```{r}
+#t MCJ: These look good, I would probably make the scheme consistent to add to paper though, I will do this in about an hour
 ggplot(DF, aes(x=PM25, y=newcasesper, color=Location)) + geom_point()
 ggplot(DF, aes(x=O3, y=newcasesper, color=Location)) + geom_point()
 ```
@@ -87,7 +89,10 @@ rmse(fitted(fixed_effect_intercept2), train$newcasesper)
 rmse(predict(fixed_effect_intercept2,test),test$newcasesper)
 
 #Considering the residual Q-Q plot to visualize any violations of the normality assumption.
-ols_plot_resid_qq(fixed_effect_intercept1)
+ols_plot_resid_qq(fixed_effect_intercept1) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"))
+    
 ols_plot_resid_qq(fixed_effect_intercept2)
 
 #Examining DFBETA plots to identify points particularly influential in estimating each parameter.
@@ -147,3 +152,62 @@ ols_plot_cooksd_bar(fixed_effect_ni)
 
 summary(fixed_effect_ni)
 ```
+
+```{r}
+#MCJ
+source("Utils.R")
+preds <- predict(fixed_effect_ni, newdata = test, type = "response")
+eval_results(test$newcasesper, preds, test)
+```
+
+Lets try using some lasso and elastic net work on this same model
+
+```{r}
+x.test <- as.matrix(test[, c(4, 5, 8:10)])
+y.test <- test$newcasesper
+x.train <- as.matrix(train[, c(4, 5, 8:10)])
+y.train <- train$newcasesper
+
+#lasso
+cvfit.lasso <- cv.glmnet(x.test, y.test, nfolds = 100, alpha = 1)
+plot(cvfit.lasso)
+optimal_lambda.lasso <- cvfit.lasso$lambda.min
+coef(cvfit.lasso, s = "lambda.min")
+
+lasso_model <- glmnet(x.train, y.train, alpha = 1, lambda = optimal_lambda.lasso)
+preds <- predict(lasso_model, newx = x.test, s = optimal_lambda.lasso)
+eval_results(y.test, preds, test) #this is pretty solid
+
+#ridge
+cvfit.ridge <- cv.glmnet(x.test, y.test, nfolds = 100, alpha = 0)
+plot(cvfit.ridge)
+optimal_lambda.ridge <- cvfit.ridge$lambda.min
+coef(cvfit.ridge, s = "lambda.min")
+
+ridge_model <- glmnet(x.train, y.train, alpha = 1, lambda = optimal_lambda.ridge)
+preds <- predict(ridge_model, newx = x.test, s = optimal_lambda.ridge)
+eval_results(y.test, preds, test) #not as good as lasso, lets try an elastic net
+
+library(caret)
+set.seed(123)
+
+trCtrl <- trainControl(method = "repeatedcv", number = 50)
+elastic.model <- train(
+  newcasesper ~ O3 + 
+    PM25 + 
+    loc + 
+    Stay_At_Home + 
+    Bar_Close,
+  data = train, 
+  method = "glmnet",
+  trControl = trCtrl
+)
+elastic.model #this confirms that lasso is the best, but it seems to have found a better lambda, lets try using this is a new model
+
+elastic.model$bestTune
+
+lasso_model2 <- glmnet(x.train, y.train, alpha = 1, lambda = elastic.model$bestTune$lambda)
+preds <- predict(lasso_model2, newx = x.test, s = elastic.model$bestTune$lambda)
+eval_results(y.test, preds, test) #yup this one is now the best on out of sample data
+```
+
