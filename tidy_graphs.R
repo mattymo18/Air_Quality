@@ -112,6 +112,7 @@ Full.data = Full.data %>%
   mutate(New_Cases = Cases - lag(Cases)) 
 Full.data$New_Cases[205] = 0
 Full.data$New_Cases[1] = 0
+Full.data$New_Cases[13] = 0
 Full.data = Full.data %>% 
   filter(New_Cases > 0)
 
