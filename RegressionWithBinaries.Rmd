@@ -207,7 +207,17 @@ elastic.model #this confirms that lasso is the best, but it seems to have found 
 elastic.model$bestTune
 
 lasso_model2 <- glmnet(x.train, y.train, alpha = 1, lambda = elastic.model$bestTune$lambda)
+coef(lasso_model2)
 preds <- predict(lasso_model2, newx = x.test, s = elastic.model$bestTune$lambda)
 eval_results(y.test, preds, test) #yup this one is now the best on out of sample data
+plot(lasso_model2, "norm", label = T)
+
+
+
+library(lars)
+predlars <- predict(lasso_model2, s=elastic.model$bestTune$lambda, type="coef", mode="fraction")
+plot(predlars, type="h", ylab="Coefficient") 
+abline(0, 0)
+sum(predlars != 0) #suggesting we should use all of the predictors
 ```
 
