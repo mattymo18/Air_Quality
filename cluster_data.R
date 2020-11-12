@@ -5,7 +5,7 @@ library(factoextra)
 library(tidyverse)
 library(gridExtra)
 
-set.seed = 18
+set.seed(18)
 
 DF.Full <- read.csv("derived_data/DF.Final.csv") %>% 
   mutate(New_Cases = Cases - lag(Cases))
